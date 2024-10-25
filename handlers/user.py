@@ -1,24 +1,29 @@
-from app.services.user import UserService
+from aws_lambda_powertools.utilities.typing import LambdaContext
+
+from app.services.logger import StandardLogger
+from config.app import get_settings
+
+settings = get_settings()
+
+log_level = settings.LOG_LEVEL
+logger = StandardLogger(service="sample-service-name", level=log_level)
 
 
-def main(event, context):
-    """
-    Process and save user data from AWS Lambda event records.
+def main(event: dict, context: LambdaContext):
+    context_dict = logger.convert_context_to_dict(context)
 
-    This function is designed to be used as an AWS Lambda handler for processing
-    user data from an event triggered by an AWS service like SQS. It processes each
-    record in the event and saves the user data using the UserService class.
+    logger.info("Event Handling", extra={"event": event, "context": context_dict})
 
-    Parameters:
-    - event (dict): The AWS Lambda event object containing records.
-    - context (LambdaContext): The AWS Lambda context object.
+    logger.append_keys(dump={"firstname": "Dingdong"})
 
-    Returns:
-    - dict: A dictionary indicating a successful execution with a status code of 200.
-    """
-    for item in event["Records"]:
-        body = item["body"]
-        user_service = UserService()
-        user_service.save(body)
+    logger.debug("Debug Data")
 
-    return {"StatusCode": 200}
+    try:
+        raise ValueError("Something went wrong")
+
+    except ValueError as e:
+        logger.exception(
+            "Error Occurred", extra={"event": event, "context": context_dict}
+        )
+
+    return {"statusCode": 200}
