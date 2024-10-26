@@ -16,9 +16,10 @@ class Settings(BaseSettings):
     Configuration class for application settings.
     """
 
-    ALLOWED_ORIGINS: str
+    APP_NAME: str
     APP_ENVIRONMENT: str
     APP_DEBUG: bool
+    ALLOWED_ORIGINS: str
     LOG_LEVEL: str
     LOG_FILE: str
     DB_TYPE: str
