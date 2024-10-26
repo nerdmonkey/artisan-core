@@ -1,7 +1,7 @@
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.logging.formatter import LambdaPowertoolsFormatter
 
-from config.logger import APP_NAME, LOG_LEVEL
+from config.logging import APP_NAME, LOG_LEVEL
 
 
 class StandardLogFormatter(LambdaPowertoolsFormatter):

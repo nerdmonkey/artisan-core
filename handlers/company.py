@@ -1,8 +1,8 @@
-from app.middlewares.logger import standard_logger as logger
-from app.middlewares.logger import standard_logger_middleware
+from app.middlewares.logging import standard_logger as logger
+from app.middlewares.logging import standard_logging_middleware
 
 
-@standard_logger_middleware
+@standard_logging_middleware
 def main(event, context):
     """
     Main handler function for processing company-related events.

@@ -1,9 +1,9 @@
-from app.services.logger import StandardLoggerService
+from app.services.logging import StandardLoggerService
 
 standard_logger = StandardLoggerService()
 
 
-def standard_logger_middleware(handler):
+def standard_logging_middleware(handler):
     def wrapper(event, context):
 
         if not hasattr(context, 'cold_start'):
