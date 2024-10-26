@@ -1,4 +1,3 @@
-import logging
 from datetime import date
 from typing import Optional
 
@@ -88,7 +87,6 @@ async def get_users(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=f"{str(e)}")
     except Exception as e:
-        logging.error(e)
         raise HTTPException(status_code=500, detail=f"{str(e)}")
 
 
@@ -111,10 +109,8 @@ async def get_user(id: int, db: Session = Depends(get_session)):
             raise HTTPException(status_code=404, detail="User not found")
         return {"data": user, "status_code": 200}
     except HTTPException as e:
-        logging.error(e)
         raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
-        logging.error(e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -139,7 +135,6 @@ async def create_user(user: UserCreateRequest, db: Session = Depends(get_session
         created_user = user_service.save(user)
         return {"data": created_user, "status_code": 201}
     except Exception as e:
-        logging.error(e)
         raise HTTPException(status_code=500, detail=f"Error occured {e}")
 
 
@@ -170,10 +165,8 @@ async def update_user(
             raise HTTPException(status_code=404, detail="User not found")
         return {"data": updated_user, "status_code": 200}
     except HTTPException as e:
-        logging.error(e)
         raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
-        logging.error(e)
         raise HTTPException(status_code=500, detail=f"Erorr occured {e}")
 
 
@@ -223,5 +216,4 @@ async def delete_multiple_users(
 
         return {"data": {"user_deleted": len(id_list)}, "status_code": 200}
     except Exception as e:
-        logging.error(e)
         raise HTTPException(status_code=500, detail=f"Error occured {e}")
