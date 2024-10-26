@@ -95,7 +95,6 @@ class AppService:
             Exception: The original error that occurred during the DynamoDB operation.
 
         """
-        self.logger.error(f"Error {action} state: {error}")
         raise error
 
     def set_state(self, key, value):
