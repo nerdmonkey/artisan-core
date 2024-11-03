@@ -5,11 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
 
-from config.app import get_settings
+from config.app import env
 from routes import health, users
 
 sys.path.append(".")
-settings = get_settings()
+settings = env()
 
 
 description = """
@@ -38,9 +38,6 @@ tags_metadata = [
         "description": "A health check endpoint to verify the API's functional condition.",
     },
 ]
-
-
-settings = get_settings()
 
 
 if settings.APP_ENVIRONMENT == "dev":

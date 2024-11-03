@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.requests.user import UserCreateRequest, UserUpdateRequest
 from app.responses.user import PaginatedUserResponse, SingleUserResponse
 from app.services.user import UserService
-from config.database import get_session
+from config.database import db
 
 user_service = UserService(db=None)
 
@@ -26,7 +26,7 @@ async def get_users(
     email: Optional[str] = Query(None, description="email filter"),
     start_date: Optional[date] = Query(None, description="start date filter"),
     end_date: Optional[date] = Query(None, description="end date filter"),
-    db: Session = Depends(get_session),
+    db: Session = Depends(db),
 ):
     """
     Get a list of users with pagination and optional filters.
@@ -91,7 +91,7 @@ async def get_users(
 
 
 @route.get("/users/{id}", status_code=200, response_model=SingleUserResponse)
-async def get_user(id: int, db: Session = Depends(get_session)):
+async def get_user(id: int, db: Session = Depends(db)):
     """
     Get a user by their unique identifier.
 
@@ -115,7 +115,7 @@ async def get_user(id: int, db: Session = Depends(get_session)):
 
 
 @route.post("/users", status_code=201, response_model=SingleUserResponse)
-async def create_user(user: UserCreateRequest, db: Session = Depends(get_session)):
+async def create_user(user: UserCreateRequest, db: Session = Depends(db)):
     """
     Create a new user.
 
@@ -140,7 +140,7 @@ async def create_user(user: UserCreateRequest, db: Session = Depends(get_session
 
 @route.put("/users/{id}", status_code=200, response_model=SingleUserResponse)
 async def update_user(
-    id: int, user: UserUpdateRequest, db: Session = Depends(get_session)
+    id: int, user: UserUpdateRequest, db: Session = Depends(db)
 ):
     """
     Update an existing user's information.
@@ -171,7 +171,7 @@ async def update_user(
 
 
 @route.delete("/users/{id}", status_code=200, response_model=SingleUserResponse)
-async def delete_user(id: int, db: Session = Depends(get_session)):
+async def delete_user(id: int, db: Session = Depends(db)):
     """
     Delete a user by their unique identifier.
 
@@ -206,7 +206,7 @@ async def delete_user(id: int, db: Session = Depends(get_session)):
 )
 async def delete_multiple_users(
     ids: str,
-    db: Session = Depends(get_session),
+    db: Session = Depends(db),
 ):
     try:
         id_list = [int(id) for id in ids.split(",")]
