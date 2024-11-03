@@ -4,16 +4,14 @@ import pytest
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from starlette.testclient import TestClient
 
 from app.models.base import Base
 from app.models.user import User
-from config.database import get_session
-from public.main import app
+from config.database import db
 
 load_dotenv(dotenv_path=".env_testing")
 
-get_db = get_session()
+get_db = db()
 
 
 def construct_database_url():
@@ -74,13 +72,3 @@ def test_data(test_db_session):
     for user in users:
         test_db_session.delete(user)
     test_db_session.commit()
-
-
-@pytest.fixture(scope="function")
-def client(test_db_session):
-    app.dependency_overrides[get_db] = lambda: test_db_session
-
-    with TestClient(app) as test_client:
-        yield test_client
-
-    app.dependency_overrides.clear()

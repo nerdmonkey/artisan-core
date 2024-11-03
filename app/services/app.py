@@ -1,5 +1,3 @@
-import os
-
 import boto3
 import jsonpickle
 
@@ -9,13 +7,6 @@ class AppService:
     A service class to interact with an AWS DynamoDB table.
     Provides methods to set, get, and remove a state in a DynamoDB table.
     """
-
-    def __init__(self):
-        """
-        Initializes the AppService class.
-        Sets up the DynamoDB resource and table.
-        """
-        self.dynamodb_resource, self.table = self._setup_dynamodb()
 
     def __init__(self):
         """
