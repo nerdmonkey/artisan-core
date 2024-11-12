@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Tuple
 
+from pydantic import ValidationError
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
 
@@ -71,6 +72,7 @@ class UserService:
         items_per_page: int = 10,
         sort_type: str = "asc",
         sort_by: str = "id",
+        email: str = None,
         username: str = None,
         start_date: datetime = None,
         end_date: datetime = None,
@@ -78,11 +80,9 @@ class UserService:
         offset = (page - 1) * items_per_page
         query = self.db.query(User)
 
-        # Apply username filter in MockSession
         if username:
             query = query.filter(User.username == username)
 
-        # Sorting logic
         if not hasattr(User, sort_by):
             raise InvalidSortFieldError("Invalid sort field or sort type")
 
@@ -91,16 +91,13 @@ class UserService:
             asc(sort_column) if sort_type == "asc" else desc(sort_column)
         )
 
-        # Retrieve filtered and paginated results from MockSession
         users = query.offset(offset).limit(items_per_page).all()
 
-        # Apply date filtering directly within UserService
         if start_date and end_date:
             users = [
                 user for user in users if start_date <= user.created_at <= end_date
             ]
 
-        # Convert users to response format
         users_response = [
             UserResponse(
                 id=user.id,
@@ -112,7 +109,6 @@ class UserService:
             for user in users
         ]
 
-        # Pagination details
         total = query.count()
         last_page = (total - 1) // items_per_page + 1
         first_item = offset + 1
@@ -133,27 +129,27 @@ class UserService:
         Raises:
             DuplicateUserError: If a user with the same email already exists.
         """
-        existing_user = (
-            self.db.query(User).filter(User.email == user_request.email).first()
-        )
-        if existing_user:
-            raise DuplicateUserError("User with this email already exists")
 
-        user_data = user_request.model_dump(exclude_unset=True)
-        user_data["password"] = "hashed_" + user_data["password"]
-        new_user = User(**user_data)
+        try:
+            user_data = user_request.model_dump(exclude_unset=True)
+            user_data["password"] = "hashed_" + user_data["password"]
+            new_user = User(**user_data)
 
-        self.db.add(new_user)
-        self.db.commit()
-        self.db.refresh(new_user)
+            self.db.add(new_user)
+            self.db.commit()
+            self.db.refresh(new_user)
+            print("hey")
 
-        return UserCreateResponse(
-            id=new_user.id,
-            username=new_user.username,
-            email=new_user.email,
-            created_at=new_user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            updated_at=new_user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
-        )
+            return UserCreateResponse(
+                id=new_user.id,
+                username=new_user.username,
+                email=new_user.email,
+                created_at=new_user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                updated_at=new_user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+            )
+        except ValidationError as e:
+            self.db.rollback()
+            raise e
 
     def update(self, id: int, user_request: UserUpdateRequest) -> UserUpdateResponse:
         """

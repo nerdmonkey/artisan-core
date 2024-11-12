@@ -3,6 +3,9 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
+from app.models.user import User
+from config.database import db
+
 
 class UserCreateRequest(BaseModel):
     """
@@ -24,6 +27,11 @@ class UserCreateRequest(BaseModel):
 
     @field_validator("username", mode="before")
     def check_name(cls, value):
+        existing_username = db().query(User).filter(User.username == value).first()
+
+        if existing_username:
+            raise ValueError("User with this username already exists")
+
         if not value.strip():
             raise ValueError("The name field is required")
 
@@ -39,6 +47,11 @@ class UserCreateRequest(BaseModel):
     def check_email(cls, value):
         if not value.strip():
             raise ValueError("The email field is required")
+
+        existing_email = db().query(User).filter(User.email == value).first()
+
+        if existing_email:
+            raise ValueError("User with this email already exists")
 
         return value
 

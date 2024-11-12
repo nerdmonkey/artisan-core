@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from pydantic import BaseModel, ConfigDict, field_serializer
+from pydantic import BaseModel, ConfigDict
 
 
 class UserResponse(BaseModel):
@@ -11,15 +11,10 @@ class UserResponse(BaseModel):
     created_at: datetime = str
     updated_at: datetime = str
 
-    model_config = ConfigDict(from_attributes=True)
-
-    @field_serializer("created_at")
-    def created_at(cls, v: datetime) -> str:
-        return v.strftime("%Y-%m-%d %H:%M:%S")
-
-    @field_serializer("updated_at")
-    def updated_at(cls, v: datetime) -> str:
-        return v.strftime("%Y-%m-%d %H:%M:%S")
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")},
+    )
 
 
 class SingleUserResponse(BaseModel):

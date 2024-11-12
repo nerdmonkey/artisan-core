@@ -19,6 +19,7 @@ class LoggerFactory:
                 TCPLogger: If the environment is 'local' and the logging channel is 'tcp'.
                 ConsoleLogger: For all other configurations.
     """
+
     @staticmethod
     def create_logger():
         app_env = env().APP_ENVIRONMENT

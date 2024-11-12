@@ -139,9 +139,7 @@ async def create_user(user: UserCreateRequest, db: Session = Depends(db)):
 
 
 @route.put("/users/{id}", status_code=200, response_model=SingleUserResponse)
-async def update_user(
-    id: int, user: UserUpdateRequest, db: Session = Depends(db)
-):
+async def update_user(id: int, user: UserUpdateRequest, db: Session = Depends(db)):
     """
     Update an existing user's information.
 
