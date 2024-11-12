@@ -118,7 +118,10 @@ class MockSession:
         self.users.remove(item)
 
     def commit(self):
-        pass
+        self.committed = True
+
+    def rollback(self):
+        self.rollback_called = True
 
     def refresh(self, item):
         pass
