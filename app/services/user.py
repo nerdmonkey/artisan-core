@@ -62,13 +62,13 @@ class UserService:
             asc(sort_column) if sort_type == "asc" else desc(sort_column)
         )
 
-        users = query.offset(offset).limit(items_per_page).all()
+        results = query.offset(offset).limit(items_per_page).all()
         total = query.count()
 
-        users_response = [self._user_to_response(user) for user in users]
+        users = list(map(self._user_to_response, results))
 
         return (
-            users_response,
+            users,
             total,
             (total - 1) // items_per_page + 1,
             offset + 1,
@@ -76,18 +76,6 @@ class UserService:
         )
 
     def find(self, id: int) -> UserResponse:
-        """
-        Find a user by their ID and return the user response.
-
-        Args:
-            id (int): The ID of the user.
-
-        Returns:
-            UserResponse: The user response.
-
-        Raises:
-            UserNotFoundError: If the user is not found.
-        """
         user = self.get_by_id(id)
         return self._user_to_response(user)
 
