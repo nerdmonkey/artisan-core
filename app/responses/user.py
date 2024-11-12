@@ -1,20 +1,23 @@
 from datetime import datetime
 from typing import List
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 
 
 class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    created_at: datetime = str
-    updated_at: datetime = str
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(
         from_attributes=True,
-        json_encoders={datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")},
     )
+
+    @field_serializer("created_at", "updated_at")
+    def serialize_datetime(cls, value: datetime) -> str:
+        return value.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class SingleUserResponse(BaseModel):

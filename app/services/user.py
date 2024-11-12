@@ -1,11 +1,18 @@
 from datetime import datetime
 from typing import List, Tuple
+
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
-from app.exceptions.user import InvalidSortFieldError, UserNotFoundError, DuplicateUserError
+
+from app.exceptions.user import (
+    DuplicateUserError,
+    InvalidSortFieldError,
+    UserNotFoundError,
+)
 from app.models.user import User
 from app.requests.user import UserCreateRequest, UserUpdateRequest
 from app.responses.user import UserCreateResponse, UserResponse, UserUpdateResponse
+
 
 class UserService:
     def __init__(self, db: Session):
@@ -26,9 +33,17 @@ class UserService:
             updated_at=user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
         )
 
-    def all(self, page=1, items_per_page=10, sort_type="asc", sort_by="id",
-            email=None, username=None, start_date=None, end_date=None) -> Tuple[List[UserResponse], int, int, int, int]:
-
+    def all(
+        self,
+        page=1,
+        items_per_page=10,
+        sort_type="asc",
+        sort_by="id",
+        email=None,
+        username=None,
+        start_date=None,
+        end_date=None,
+    ) -> Tuple[List[UserResponse], int, int, int, int]:
         if sort_type not in ["asc", "desc"]:
             raise ValueError("Invalid sort type; must be 'asc' or 'desc'")
 
@@ -46,34 +61,53 @@ class UserService:
             raise InvalidSortFieldError("Invalid sort field")
 
         sort_column = getattr(User, sort_by)
-        query = query.order_by(asc(sort_column) if sort_type == "asc" else desc(sort_column))
+        query = query.order_by(
+            asc(sort_column) if sort_type == "asc" else desc(sort_column)
+        )
 
         users = query.offset(offset).limit(items_per_page).all()
         total = query.count()
 
         users_response = [self._user_to_response(user) for user in users]
 
-        return users_response, total, (total - 1) // items_per_page + 1, offset + 1, min(offset + items_per_page, total)
-
+        return (
+            users_response,
+            total,
+            (total - 1) // items_per_page + 1,
+            offset + 1,
+            min(offset + items_per_page, total),
+        )
 
     def save(self, user_request: UserCreateRequest) -> UserCreateResponse:
-        """Save a new user, checking for duplicates."""
-        existing_user = self.db.query(User).filter(User.email == user_request.email).first()
+        """Save a new user to the database."""
+        # Check for duplicate user by email
+        existing_user = (
+            self.db.query(User).filter(User.email == user_request.email).first()
+        )
         if existing_user:
             raise DuplicateUserError("User with this email already exists")
 
         user_data = user_request.model_dump(exclude_unset=True)
-        user_data["password"] = "hashed_" + user_data["password"]
+        user_data["password"] = (
+            "hashed_" + user_data["password"]
+        )  # Simple example hashing
+
+        # Create the new user instance
         new_user = User(**user_data)
 
+        # Add and commit the new user to the database
         self.db.add(new_user)
         self.db.commit()
         self.db.refresh(new_user)
-        return self._user_to_response(new_user)
 
-
-
-
+        # Return a UserCreateResponse instead of UserResponse
+        return UserCreateResponse(
+            id=new_user.id,
+            username=new_user.username,
+            email=new_user.email,
+            created_at=new_user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            updated_at=new_user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
     def update(self, id: int, user_request: UserUpdateRequest) -> UserUpdateResponse:
         """Update a user in the database."""
@@ -87,7 +121,15 @@ class UserService:
 
         self.db.commit()
         self.db.refresh(user)
-        return self._user_to_response(user)
+
+        # Convert created_at and updated_at to strings for UserUpdateResponse
+        return UserUpdateResponse(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            created_at=user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            updated_at=user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
     def delete(self, id: int) -> UserResponse:
         """
