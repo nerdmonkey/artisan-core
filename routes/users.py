@@ -1,15 +1,25 @@
 from datetime import date
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+from app.exceptions.user import (
+    DuplicateUserError,
+    InvalidSortFieldError,
+    UserNotFoundError,
+)
 from app.requests.user import UserCreateRequest, UserUpdateRequest
 from app.responses.user import PaginatedUserResponse, SingleUserResponse
 from app.services.user import UserService
 from config.database import db
 
-user_service = UserService(db=None)
+
+# Dependency to create a new UserService with each request
+def get_user_service(db: Session = Depends(db)) -> UserService:
+    return UserService(db=db)
+
 
 route = APIRouter(
     prefix="/api", tags=["Users"], responses={404: {"description": "Not found"}}
@@ -26,30 +36,15 @@ async def get_users(
     email: Optional[str] = Query(None, description="email filter"),
     start_date: Optional[date] = Query(None, description="start date filter"),
     end_date: Optional[date] = Query(None, description="end date filter"),
-    db: Session = Depends(db),
+    user_service: UserService = Depends(get_user_service),
 ):
     """
     Get a list of users with pagination and optional filters.
-
-    Args:
-        page (int): The page number.
-        items_per_page (int): Number of items per page.
-        sort_by (str): Sort by field.
-        sort_type (str): Sort type (asc or desc).
-        start_date (date): Start date filter.
-        end_date (date): End date filter.
-        username (str): Username filter.
-        email (str): Email filter.
-        db (Session): SQLAlchemy database session.
-
-    Returns:
-        List[UserResponse]: List of user objects.
     """
     try:
-        user_service.db = db
         items, total, last_page, first_item, last_item = user_service.all(
-            page,
-            items_per_page,
+            page=page,
+            items_per_page=items_per_page,
             sort_type=sort_type,
             sort_by=sort_by,
             start_date=start_date,
@@ -84,134 +79,61 @@ async def get_users(
             },
             "status_code": 200,
         }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=f"{str(e)}")
+    except InvalidSortFieldError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"{str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
 
 @route.get("/users/{id}", status_code=200, response_model=SingleUserResponse)
-async def get_user(id: int, db: Session = Depends(db)):
+async def get_user(
+    id: int = Path(..., title="The ID of the user to get", gt=0),
+    user_service: UserService = Depends(get_user_service),
+):
     """
     Get a user by their unique identifier.
-
-    Args:
-        id (int): The unique identifier of the user.
-        db (Session): SQLAlchemy database session.
-
-    Returns:
-        UserResponse: User object.
     """
     try:
-        user_service.db = db
         user = user_service.find(id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
         return {"data": user, "status_code": 200}
-    except HTTPException as e:
-        raise HTTPException(status_code=404, detail="User not found")
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-@route.post("/users", status_code=201, response_model=SingleUserResponse)
-async def create_user(user: UserCreateRequest, db: Session = Depends(db)):
-    """
-    Create a new user.
-
-    Args:
-        user (UserCreateRequest): User creation request.
-        db (Session): SQLAlchemy database session.
-
-    Returns:
-        UserCreateResponse: Created user object.
-
-    Raises:
-        HTTPException: If there is an internal server error.
-
-    """
-    try:
-        user_service.db = db
-        created_user = user_service.save(user)
-        return {"data": created_user, "status_code": 201}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error occured {e}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
 
 @route.put("/users/{id}", status_code=200, response_model=SingleUserResponse)
-async def update_user(id: int, user: UserUpdateRequest, db: Session = Depends(db)):
+async def update_user(
+    user_request: UserUpdateRequest,
+    id: int = Path(..., title="The ID of the user to update", gt=0),
+    user_service: UserService = Depends(get_user_service),
+):
     """
     Update an existing user's information.
-
-    Args:
-        id (int): The unique identifier of the user to update.
-        user (UserUpdateRequest): User update request.
-        db (Session): SQLAlchemy database session.
-
-    Returns:
-        UserUpdateResponse: Updated user object.
-
-    Raises:
-        HTTPException: If the user is not found (status_code=404),
-                       if there is a value error (status_code=400),
-                       or if there is an internal server error (status_code=500).
     """
     try:
-        user_service.db = db
-        updated_user = user_service.update(id, user)
-        if not updated_user:
-            raise HTTPException(status_code=404, detail="User not found")
+        updated_user = user_service.update(id, user_request)
         return {"data": updated_user, "status_code": 200}
-    except HTTPException as e:
-        raise HTTPException(status_code=404, detail="User not found")
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erorr occured {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @route.delete("/users/{id}", status_code=200, response_model=SingleUserResponse)
-async def delete_user(id: int, db: Session = Depends(db)):
+async def delete_user(
+    id: int = Path(..., title="The ID of the user to delete", gt=0),
+    user_service: UserService = Depends(get_user_service),
+):
     """
     Delete a user by their unique identifier.
-
-    Args:
-        id (int): The unique identifier of the user to delete.
-        db (Session): SQLAlchemy database session.
-
-    Returns:
-        dict: A dictionary containing the deleted user data and the status code.
-
-    Raises:
-        HTTPException: If the user is not found or if there is an internal server error.
     """
     try:
-        user_service.db = db
-
         user = user_service.delete(id)
-
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-
         return {"data": user, "status_code": 200}
-    except HTTPException as e:
-        raise e
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error occured {e}")
-
-
-@route.delete(
-    "/users/{ids}/bulk",
-    status_code=200,
-)
-async def delete_multiple_users(
-    ids: str,
-    db: Session = Depends(db),
-):
-    try:
-        id_list = [int(id) for id in ids.split(",")]
-
-        user_service.db = db
-        user_service.bulk_delete(id_list)
-
-        return {"data": {"user_deleted": len(id_list)}, "status_code": 200}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error occured {e}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")

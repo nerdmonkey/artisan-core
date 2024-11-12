@@ -7,6 +7,22 @@ from app.models.user import User
 from config.database import db
 
 
+class UserFindRequest(BaseModel):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("id", mode="before")
+    def check_id(cls, value):
+        if value == 0:
+            raise ValueError("Id must be greater than 0")
+
+        existing_id = db().query(User).filter(User.id == value).first()
+
+        if not existing_id:
+            raise ValueError("User does not exist")
+
+
 class UserCreateRequest(BaseModel):
     """
     Data model for creating a new user.
@@ -77,7 +93,7 @@ class UserUpdateRequest(BaseModel):
     @field_validator("username", mode="before")
     def check_name(cls, value):
         if value is None:
-            return value  # Allow None for optional field
+            return value
 
         if not value.strip():
             raise ValueError("The name field is required")
@@ -93,7 +109,7 @@ class UserUpdateRequest(BaseModel):
     @field_validator("email", mode="before")
     def check_email(cls, value):
         if value is None:
-            return value  # Allow None for optional field
+            return value
 
         if not value.strip():
             raise ValueError("The email field is required")

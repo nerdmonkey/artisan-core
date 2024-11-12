@@ -1,90 +1,61 @@
 from datetime import datetime
 from typing import List, Tuple
 
-from pydantic import ValidationError
+from passlib.hash import bcrypt
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
 
-from app.exceptions.user import (
-    DuplicateUserError,
-    InvalidSortFieldError,
-    UserNotFoundError,
-)
+from app.exceptions.user import InvalidSortFieldError, UserNotFoundError
 from app.models.user import User
 from app.requests.user import UserCreateRequest, UserUpdateRequest
 from app.responses.user import UserCreateResponse, UserResponse, UserUpdateResponse
 
 
 class UserService:
-    """
-    Service class for managing user-related operations.
-    """
-
     def __init__(self, db: Session):
-        """
-        Initialize the UserService class.
-
-        Args:
-            db (Session): The database session.
-        """
         self.db = db
 
     def get_by_id(self, id: int) -> User:
-        """
-        Retrieve a user by their ID.
-
-        Args:
-            id (int): The ID of the user.
-
-        Returns:
-            User: The user object.
-
-        Raises:
-            UserNotFoundError: If the user is not found.
-        """
         user = self.db.query(User).filter(User.id == id).first()
         if not user:
-            raise UserNotFoundError("User not found")
+            raise UserNotFoundError(f"User with ID {id} not found")
         return user
 
-    def filter(self, *conditions):
-        for condition in conditions:
-            if isinstance(condition, list):
-                start_date, end_date = condition
-                self.filtered_users = [
-                    user
-                    for user in self.filtered_users
-                    if start_date <= user.created_at <= end_date
-                ]
-            else:
-                attribute = condition.left.key
-                value = condition.right.value
-                self.filtered_users = [
-                    user
-                    for user in self.filtered_users
-                    if getattr(user, attribute) == value
-                ]
-        return self
+    def _user_to_response(self, user: User) -> UserResponse:
+        return UserResponse(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            created_at=user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            updated_at=user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
     def all(
         self,
-        page: int = 1,
-        items_per_page: int = 10,
-        sort_type: str = "asc",
-        sort_by: str = "id",
-        email: str = None,
-        username: str = None,
-        start_date: datetime = None,
-        end_date: datetime = None,
+        page=1,
+        items_per_page=10,
+        sort_type="asc",
+        sort_by="id",
+        email=None,
+        username=None,
+        start_date=None,
+        end_date=None,
     ) -> Tuple[List[UserResponse], int, int, int, int]:
+        if sort_type not in ["asc", "desc"]:
+            raise ValueError("Invalid sort type; must be 'asc' or 'desc'")
+
         offset = (page - 1) * items_per_page
         query = self.db.query(User)
 
         if username:
             query = query.filter(User.username == username)
+        if start_date:
+            query = query.filter(User.created_at >= start_date)
+        if end_date:
+            query = query.filter(User.created_at <= end_date)
 
         if not hasattr(User, sort_by):
-            raise InvalidSortFieldError("Invalid sort field or sort type")
+            raise InvalidSortFieldError("Invalid sort field")
 
         sort_column = getattr(User, sort_by)
         query = query.order_by(
@@ -92,134 +63,17 @@ class UserService:
         )
 
         users = query.offset(offset).limit(items_per_page).all()
-
-        if start_date and end_date:
-            users = [
-                user for user in users if start_date <= user.created_at <= end_date
-            ]
-
-        users_response = [
-            UserResponse(
-                id=user.id,
-                username=user.username,
-                email=user.email,
-                created_at=user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                updated_at=user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
-            )
-            for user in users
-        ]
-
         total = query.count()
-        last_page = (total - 1) // items_per_page + 1
-        first_item = offset + 1
-        last_item = min(offset + items_per_page, total)
 
-        return users_response, total, last_page, first_item, last_item
+        users_response = [self._user_to_response(user) for user in users]
 
-    def save(self, user_request: UserCreateRequest) -> UserCreateResponse:
-        """
-        Save a new user to the database.
-
-        Args:
-            user_request (UserCreateRequest): The user create request object.
-
-        Returns:
-            UserCreateResponse: The response data of the created user.
-
-        Raises:
-            DuplicateUserError: If a user with the same email already exists.
-        """
-
-        try:
-            user_data = user_request.model_dump(exclude_unset=True)
-            user_data["password"] = "hashed_" + user_data["password"]
-            new_user = User(**user_data)
-
-            self.db.add(new_user)
-            self.db.commit()
-            self.db.refresh(new_user)
-            print("hey")
-
-            return UserCreateResponse(
-                id=new_user.id,
-                username=new_user.username,
-                email=new_user.email,
-                created_at=new_user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                updated_at=new_user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
-            )
-        except ValidationError as e:
-            self.db.rollback()
-            raise e
-
-    def update(self, id: int, user_request: UserUpdateRequest) -> UserUpdateResponse:
-        """
-        Update a user in the database.
-
-        Args:
-            id (int): The ID of the user.
-            user_request (UserUpdateRequest): The user update request object.
-
-        Returns:
-            UserUpdateResponse: The response data of the updated user.
-
-        Raises:
-            UserNotFoundError: If the user is not found.
-        """
-        user = self.get_by_id(id)
-        update_data = user_request.model_dump(exclude_unset=True)
-        if "password" in update_data:
-            update_data["password"] = "hashed_" + update_data["password"]
-
-        for key, value in update_data.items():
-            setattr(user, key, value)
-
-        self.db.commit()
-        self.db.refresh(user)
-
-        return UserUpdateResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            created_at=user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            updated_at=user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+        return (
+            users_response,
+            total,
+            (total - 1) // items_per_page + 1,
+            offset + 1,
+            min(offset + items_per_page, total),
         )
-
-    def delete(self, id: int) -> UserResponse:
-        """
-        Delete a user by ID.
-
-        Args:
-            id (int): The ID of the user to delete.
-
-        Returns:
-            UserResponse: The deleted user information.
-
-        Raises:
-            UserNotFoundError: If the user is not found.
-        """
-        user = self.get_by_id(id)
-
-        response = UserResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            created_at=user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            updated_at=user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
-        )
-
-        self.db.delete(user)
-        self.db.commit()
-
-        return response
-
-    def total(self) -> int:
-        """
-        Get the total number of users.
-
-        Returns:
-            int: The total number of users.
-        """
-        return self.db.query(User).count()
 
     def find(self, id: int) -> UserResponse:
         """
@@ -235,24 +89,58 @@ class UserService:
             UserNotFoundError: If the user is not found.
         """
         user = self.get_by_id(id)
-        return UserResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            created_at=user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            updated_at=user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
-        )
+        return self._user_to_response(user)
 
-    def bulk_delete(self, user_ids: List[int]) -> List[int]:
-        users_to_delete = self.db.query(User).filter(User.id.in_(user_ids)).all()
+    def save(self, user_request: UserCreateRequest) -> UserCreateResponse:
+        try:
+            user_data = user_request.model_dump(exclude_unset=True)
+            user_data["password"] = bcrypt.hash(user_data["password"])
+            new_user = User(**user_data)
 
-        if not users_to_delete:
-            raise UserNotFoundError("No users found for the given IDs")
+            self.db.add(new_user)
+            self.db.commit()
+            self.db.refresh(new_user)
+            return self._user_to_response(new_user)
+        except Exception as e:
+            self.db.rollback()
+            raise e
 
-        deleted_user_ids = [user.id for user in users_to_delete]
-        for user in users_to_delete:
-            self.db.delete(user)
+    def update(self, id: int, user_request: UserUpdateRequest) -> UserUpdateResponse:
+        user = self.get_by_id(id)
+        update_data = user_request.model_dump(exclude_unset=True)
+        if "password" in update_data:
+            update_data["password"] = bcrypt.hash(update_data["password"])
+
+        for key, value in update_data.items():
+            setattr(user, key, value)
 
         self.db.commit()
+        self.db.refresh(user)
+        return self._user_to_response(user)
 
-        return deleted_user_ids
+    def delete(self, id: int) -> UserResponse:
+        user = self.get_by_id(id)
+        response = self._user_to_response(user)
+        try:
+            self.db.delete(user)
+            self.db.commit()
+            return response
+        except Exception as e:
+            self.db.rollback()
+            raise e
+
+    def bulk_delete(self, user_ids: List[int]) -> List[int]:
+        try:
+            users_to_delete = self.db.query(User).filter(User.id.in_(user_ids)).all()
+            if not users_to_delete:
+                raise UserNotFoundError("No users found for the given IDs")
+
+            deleted_user_ids = [user.id for user in users_to_delete]
+            for user in users_to_delete:
+                self.db.delete(user)
+
+            self.db.commit()
+            return deleted_user_ids
+        except Exception as e:
+            self.db.rollback()
+            raise e
