@@ -171,3 +171,48 @@ async def delete_user(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
+
+@route.delete("/bulk-delete/{ids}", status_code=status.HTTP_200_OK)
+async def batch_delete_users(
+    ids: str = Path(..., description="Comma-separated list of user IDs to delete"),
+    user_service: UserService = Depends(get_user_service)
+):
+    """
+    Batch delete multiple users by their IDs from the URL path.
+
+    Args:
+        user_ids (str): Comma-separated list of user IDs.
+        user_service (UserService): UserService instance for handling user operations.
+
+    Returns:
+        dict: A dictionary with a message indicating the deletion status.
+
+    Raises:
+        HTTPException: If no users are found with the given IDs.
+    """
+    try:
+        # Convert the comma-separated string to a list of integers
+        user_id_list = [int(user_id.strip()) for user_id in ids.split(",")]
+
+        # Call the bulk_delete method in UserService
+        deleted_user_ids = user_service.bulk_delete(user_id_list)
+        return {"message": f"Deleted users with IDs: {deleted_user_ids}"}
+    except UserNotFoundError:
+        # Raise a 404 error if no users are found with the given IDs
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found for the given IDs"
+        )
+    except ValueError:
+        # Handle invalid ID format
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid format for user IDs. Please provide a comma-separated list of integers."
+        )
+    except Exception as e:
+        # Handle other unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred while deleting users: {str(e)}"
+        )
