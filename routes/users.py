@@ -232,7 +232,7 @@ async def delete_user(
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
 
-@route.delete("/bulk-delete/{ids}", status_code=status.HTTP_200_OK)
+@route.delete("/users/{ids}/bulk", status_code=status.HTTP_200_OK)
 async def batch_delete_users(
     ids: str = Path(..., description="Comma-separated list of user IDs to delete"),
     user_service: UserService = Depends(get_user_service),

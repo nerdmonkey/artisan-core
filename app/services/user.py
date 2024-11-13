@@ -16,15 +16,43 @@ from app.responses.user import UserCreateResponse, UserResponse, UserUpdateRespo
 
 class UserService:
     def __init__(self, db: Session):
+        """
+        Initializes the User service with a database session.
+
+        Args:
+            db (Session): The database session to be used by the service.
+        """
         self.db = db
 
     def get_by_id(self, id: int) -> User:
+        """
+        Retrieve a user by their ID.
+
+        Args:
+            id (int): The ID of the user to retrieve.
+
+        Returns:
+            User: The user object corresponding to the given ID.
+
+        Raises:
+            UserNotFoundError: If no user with the given ID is found.
+        """
         user = self.db.query(User).filter(User.id == id).first()
         if not user:
             raise UserNotFoundError(f"User with ID {id} not found")
         return user
 
     def _user_to_response(self, user: User) -> UserResponse:
+        """
+        Converts a User object to a UserResponse object.
+
+        Args:
+            user (User): The user object to convert.
+
+        Returns:
+            UserResponse: The converted user response object containing the user's id, username, email,
+                          created_at, and updated_at fields formatted as strings.
+        """
         return UserResponse(
             id=user.id,
             username=user.username,
@@ -44,6 +72,31 @@ class UserService:
         start_date=None,
         end_date=None,
     ) -> Tuple[List[UserResponse], int, int, int, int]:
+        """
+        Retrieve a paginated list of users with optional filtering and sorting.
+
+        Args:
+            page (int, optional): The page number to retrieve. Defaults to 1.
+            items_per_page (int, optional): The number of items per page. Defaults to 10.
+            sort_type (str, optional): The sort order, either 'asc' or 'desc'. Defaults to "asc".
+            sort_by (str, optional): The field to sort by. Defaults to "id".
+            email (str, optional): Filter by email. Defaults to None.
+            username (str, optional): Filter by username. Defaults to None.
+            start_date (datetime, optional): Filter by start date (inclusive). Defaults to None.
+            end_date (datetime, optional): Filter by end date (inclusive). Defaults to None.
+
+        Returns:
+            Tuple[List[UserResponse], int, int, int, int]: A tuple containing:
+                - A list of UserResponse objects for the current page.
+                - The total number of users.
+                - The total number of pages.
+                - The starting index of the current page.
+                - The ending index of the current page.
+
+        Raises:
+            ValueError: If the sort_type is not 'asc' or 'desc'.
+            InvalidSortFieldError: If the sort_by field is not a valid attribute of the User model.
+        """
         if sort_type not in ["asc", "desc"]:
             raise ValueError("Invalid sort type; must be 'asc' or 'desc'")
 
@@ -79,8 +132,19 @@ class UserService:
         )
 
     def save(self, user_request: UserCreateRequest) -> UserCreateResponse:
-        """Save a new user to the database."""
-        # Check for duplicate user by email
+        """
+        Saves a new user to the database.
+
+        Args:
+            user_request (UserCreateRequest): The request object containing user details.
+
+        Returns:
+            UserCreateResponse: The response object containing the created user's details.
+
+        Raises:
+            DuplicateUserError: If a user with the given email already exists.
+        """
+
         existing_user = (
             self.db.query(User).filter(User.email == user_request.email).first()
         )
@@ -88,19 +152,14 @@ class UserService:
             raise DuplicateUserError("User with this email already exists")
 
         user_data = user_request.model_dump(exclude_unset=True)
-        user_data["password"] = (
-            "hashed_" + user_data["password"]
-        )  # Simple example hashing
+        user_data["password"] = "hashed_" + user_data["password"]
 
-        # Create the new user instance
         new_user = User(**user_data)
 
-        # Add and commit the new user to the database
         self.db.add(new_user)
         self.db.commit()
         self.db.refresh(new_user)
 
-        # Return a UserCreateResponse instead of UserResponse
         return UserCreateResponse(
             id=new_user.id,
             username=new_user.username,
@@ -110,7 +169,17 @@ class UserService:
         )
 
     def update(self, id: int, user_request: UserUpdateRequest) -> UserUpdateResponse:
-        """Update a user in the database."""
+        """
+        Updates an existing user with the provided data.
+        Args:
+            id (int): The ID of the user to update.
+            user_request (UserUpdateRequest): The request object containing the updated user data.
+        Returns:
+            UserUpdateResponse: The response object containing the updated user data.
+        Raises:
+            UserNotFoundException: If no user with the given ID is found.
+        """
+
         user = self.get_by_id(id)
         update_data = user_request.model_dump(exclude_unset=True)
         if "password" in update_data:
@@ -122,7 +191,6 @@ class UserService:
         self.db.commit()
         self.db.refresh(user)
 
-        # Convert created_at and updated_at to strings for UserUpdateResponse
         return UserUpdateResponse(
             id=user.id,
             username=user.username,
@@ -144,6 +212,7 @@ class UserService:
         Raises:
             UserNotFoundError: If the user is not found.
         """
+
         user = self.get_by_id(id)
         response = self._user_to_response(user)
         try:
@@ -167,6 +236,7 @@ class UserService:
         Raises:
             UserNotFoundError: If no users are found for the given IDs.
         """
+
         try:
             users_to_delete = self.db.query(User).filter(User.id.in_(user_ids)).all()
             if not users_to_delete:
