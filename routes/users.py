@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
@@ -11,7 +11,7 @@ from app.exceptions.user import (
     UserNotFoundError,
 )
 from app.requests.user import UserCreateRequest, UserUpdateRequest
-from app.responses.user import PaginatedUserResponse, SingleUserResponse
+from app.responses.user import PaginatedUserResponse, SingleUserResponse, UserCreateResponse
 from app.services.user import UserService
 from config.database import db
 
@@ -102,6 +102,41 @@ async def get_user(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
+
+@route.post("/users/{id}", status_code=201, response_model=UserCreateResponse)
+async def create_user(
+    user_request: UserCreateRequest,
+    user_service: UserService = Depends(get_user_service)
+):
+    """
+    Create a new user.
+
+    Args:
+        user_request (UserCreateRequest): The request body containing user creation details.
+        user_service (UserService): The UserService dependency for handling user operations.
+
+    Returns:
+        UserCreateResponse: The response data of the created user.
+
+    Raises:
+        HTTPException: If a user with the same email already exists.
+    """
+    try:
+        # Call the service's `save` method to create the user
+        created_user = user_service.save(user_request)
+        return created_user
+    except DuplicateUserError:
+        # Raise an HTTP 409 Conflict if a duplicate user is found
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email already exists"
+        )
+    except Exception as e:
+        # Handle other exceptions
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred while creating the user: {str(e)}"
+        )
 
 @route.put("/users/{id}", status_code=200, response_model=SingleUserResponse)
 async def update_user(
