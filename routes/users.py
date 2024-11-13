@@ -16,7 +16,6 @@ from app.services.user import UserService
 from config.database import db
 
 
-# Dependency to create a new UserService with each request
 def get_user_service(db: Session = Depends(db)) -> UserService:
     return UserService(db=db)
 
