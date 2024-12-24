@@ -1,10 +1,7 @@
-import logging
-
+from app.services.logging import Logger
 from app.helpers.environment import env
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logger = Logger()
 
-logging.info(f"Currently in {env().APP_ENVIRONMENT} environment")
-logging.info("Hello, from Spartan")
+logger.info(f"Currently in {env().APP_ENVIRONMENT} environment")
+logger.info("Hello, from Spartan")
