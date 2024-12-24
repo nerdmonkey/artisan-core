@@ -6,5 +6,5 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-logging.info(f"{env().APP_ENVIRONMENT}")
+logging.info(f"Currently in {env().APP_ENVIRONMENT} environment")
 logging.info("Hello, from Spartan")
