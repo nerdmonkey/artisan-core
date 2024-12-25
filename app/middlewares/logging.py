@@ -34,3 +34,30 @@ def standard_logging_middleware(handler, logger=None):
             raise
 
     return wrapped_handler
+
+
+def task_logging_middleware(handler, logger=None):
+    logger = logger or StandardLoggerService()
+
+    def wrapped_handler(**kwargs):
+        try:
+            input_data_size = len(str(**kwargs).encode("utf-8"))
+            input_data = {
+                "input_data_size": input_data_size,
+            }
+
+            logger.info("Input Data", input_data=input_data)
+
+            response = handler(**kwargs)
+
+            output_data_size = len(str(response).encode("utf-8"))
+            logger.info(
+                "Output Data", output_data=response, output_data_size=output_data_size
+            )
+            return response
+
+        except Exception as e:
+            logger.error("Error in Task function", error=str(e))
+            raise
+
+    return wrapped_handler

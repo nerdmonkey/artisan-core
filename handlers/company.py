@@ -1,5 +1,5 @@
-from app.services.logging import Logger
 from app.helpers.environment import env
+from app.services.logging import Logger
 
 logger = Logger()
 
