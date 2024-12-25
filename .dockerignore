@@ -1,0 +1,6 @@
+
+.venv
+.vscode
+.pytest_cache
+.serverless
+.coverage
