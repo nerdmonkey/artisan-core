@@ -6,14 +6,19 @@ from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 class UserCreateRequest(BaseModel):
     """
-    Data model for creating a new user.
+    UserCreateRequest is a data model for creating a new user request.
 
     Attributes:
-        username (str): The username of the new user.
-        email (EmailStr): The email address of the new user.
-        password (str): The password for the new user.
-    """
+        username (str): The username of the user. Must be between 3 and 50 characters long.
+        email (EmailStr): The email address of the user.
+        password (str): The password for the user.
+        created_at (datetime): The timestamp when the user was created. Defaults to the current datetime.
+        updated_at (datetime): The timestamp when the user was last updated. Defaults to the current datetime.
 
+    Methods:
+        check_name(cls, value): Validates the username. Ensures it is not empty, and is between 3 and 50 characters long.
+        check_email(cls, value): Validates the email. Ensures it is not empty.
+    """
     username: str
     email: EmailStr
     password: str
@@ -45,14 +50,19 @@ class UserCreateRequest(BaseModel):
 
 class UserUpdateRequest(BaseModel):
     """
-    Data model for updating an existing user.
+    UserUpdateRequest is a Pydantic model for handling user update requests.
 
     Attributes:
-        username (Optional[str]): The new username of the user. Optional.
-        email (Optional[EmailStr]): The new email address of the user. Optional.
-        password (Optional[str]): The new password for the user. Optional.
-    """
+        username (Optional[str]): The username of the user. Must be between 3 and 20 characters long if provided.
+        email (Optional[EmailStr]): The email address of the user. Must be a valid email format if provided.
+        password (Optional[str]): The password of the user.
+        created_at (datetime): The timestamp when the user was created. Defaults to the current datetime.
+        updated_at (datetime): The timestamp when the user was last updated. Defaults to the current datetime.
 
+    Validators:
+        check_name (str): Validates the username field. Ensures it is not empty, and is between 3 and 20 characters long if provided.
+        check_email (str): Validates the email field. Ensures it is not empty if provided.
+    """
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None
@@ -64,7 +74,7 @@ class UserUpdateRequest(BaseModel):
     @field_validator("username", mode="before")
     def check_name(cls, value):
         if value is None:
-            return value  # Allow None for optional field
+            return value
 
         if not value.strip():
             raise ValueError("The name field is required")
@@ -80,7 +90,7 @@ class UserUpdateRequest(BaseModel):
     @field_validator("email", mode="before")
     def check_email(cls, value):
         if value is None:
-            return value  # Allow None for optional field
+            return value
 
         if not value.strip():
             raise ValueError("The email field is required")
