@@ -46,7 +46,7 @@ moto = "4.2.9"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q"
+addopts = "-ra -q --cov=."
 testpaths = [
     "tests",
     "integrations",
@@ -56,6 +56,7 @@ testpaths = [
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
 
 [tool.black]
 line-length = 120
