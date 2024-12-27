@@ -10,7 +10,3 @@ def main():
     return {
         "logger": logger,
     }
-
-
-if __name__ == "__main__":
-    main()
