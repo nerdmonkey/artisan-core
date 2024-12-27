@@ -9,12 +9,28 @@ from app.helpers.database import db
 from app.models.base import Base
 from app.models.user import User
 
-load_dotenv(dotenv_path=".env_testing")
+load_dotenv(dotenv_path=".env")
 
 get_db = db()
 
 
 def construct_database_url():
+    """
+    Constructs a database URL based on environment variables.
+
+    The function supports SQLite, PostgreSQL, and MySQL databases. It reads the following environment variables:
+    - DB_TYPE: The type of the database (default is "sqlite").
+    - DB_HOST: The database host (default is "localhost").
+    - DB_PORT: The database port (default is "5432").
+    - DB_USERNAME: The database username (default is "user").
+    - DB_PASSWORD: The database password (default is "password").
+
+    Returns:
+        str: The constructed database URL.
+
+    Raises:
+        ValueError: If an unsupported database type is specified.
+    """
     db_type = os.environ.get("DB_TYPE", "sqlite")
     db_name = "spartan.db"
     if db_type == "sqlite":
@@ -38,6 +54,16 @@ def construct_database_url():
 
 @pytest.fixture(scope="module")
 def test_db_session():
+    """
+    Fixture to set up and tear down a test database session.
+
+    This fixture creates a new database engine and session for testing purposes.
+    It yields a database session to the test and ensures that the session is closed
+    and the database schema is dropped after the test is completed.
+
+    Yields:
+        db (Session): A SQLAlchemy session connected to the test database.
+    """
     TEST_DATABASE_URL = construct_database_url()
 
     engine = create_engine(TEST_DATABASE_URL)
@@ -54,6 +80,18 @@ def test_db_session():
 
 @pytest.fixture(scope="module")
 def test_data(test_db_session):
+    """
+    Fixture to create and yield test user data.
+
+    This fixture creates five test users and adds them to the test database session.
+    After yielding the users, it cleans up by deleting the users from the session.
+
+    Args:
+        test_db_session (Session): The database session used for testing.
+
+    Yields:
+        list: A list of created User objects.
+    """
     users = [
         User(
             username=f"testuser{i}",
