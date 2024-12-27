@@ -19,6 +19,7 @@ class UserCreateRequest(BaseModel):
         check_name(cls, value): Validates the username. Ensures it is not empty, and is between 3 and 50 characters long.
         check_email(cls, value): Validates the email. Ensures it is not empty.
     """
+
     username: str
     email: EmailStr
     password: str
@@ -63,6 +64,7 @@ class UserUpdateRequest(BaseModel):
         check_name (str): Validates the username field. Ensures it is not empty, and is between 3 and 20 characters long if provided.
         check_email (str): Validates the email field. Ensures it is not empty if provided.
     """
+
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None

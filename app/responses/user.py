@@ -22,6 +22,7 @@ class UserResponse(BaseModel):
         updated_at(cls, v: datetime) -> str:
             Serializes the updated_at attribute to a string in the format "YYYY-MM-DD HH:MM:SS".
     """
+
     id: int
     username: str
     email: str
@@ -47,6 +48,7 @@ class SingleUserResponse(BaseModel):
         data (UserResponse): The user data.
         status_code (int): The HTTP status code of the response.
     """
+
     data: UserResponse
     status_code: int
 
@@ -70,6 +72,7 @@ class Pagination(BaseModel):
     total : int
         The total number of items.
     """
+
     current_page: int
     last_page: int
     first_item: int
@@ -87,6 +90,7 @@ class PaginatedUserResponse(BaseModel):
         meta (Pagination): Pagination metadata for the response.
         status_code (int): The HTTP status code of the response.
     """
+
     data: List[UserResponse]
     meta: Pagination
     status_code: int
@@ -103,6 +107,7 @@ class UserCreateResponse(BaseModel):
         created_at (str): The timestamp when the user was created.
         updated_at (str): The timestamp when the user was last updated.
     """
+
     id: int
     username: str
     email: str
@@ -121,6 +126,7 @@ class UserUpdateResponse(BaseModel):
         created_at (str): The timestamp when the user was created.
         updated_at (str): The timestamp when the user was last updated.
     """
+
     id: int
     username: str
     email: str
