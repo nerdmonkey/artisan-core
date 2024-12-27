@@ -12,15 +12,19 @@ class UserResponse(BaseModel):
         id (int): The unique identifier for the user.
         username (str): The username of the user.
         email (str): The email address of the user.
-        created_at (str): The timestamp when the user was created, formatted as "YYYY-MM-DD HH:MM:SS".
-        updated_at (str): The timestamp when the user was last updated, formatted as "YYYY-MM-DD HH:MM:SS".
+        created_at (str): The timestamp when the user was created,
+                            formatted as "YYYY-MM-DD HH:MM:SS".
+        updated_at (str): The timestamp when the user was last updated,
+                            formatted as "YYYY-MM-DD HH:MM:SS".
 
     Methods:
         created_at(cls, v: datetime) -> str:
-            Serializes the created_at attribute to a string in the format "YYYY-MM-DD HH:MM:SS".
+            Serializes the created_at attribute to a string in the
+            format "YYYY-MM-DD HH:MM:SS".
 
         updated_at(cls, v: datetime) -> str:
-            Serializes the updated_at attribute to a string in the format "YYYY-MM-DD HH:MM:SS".
+            Serializes the updated_at attribute to a string in the
+            format "YYYY-MM-DD HH:MM:SS".
     """
 
     id: int

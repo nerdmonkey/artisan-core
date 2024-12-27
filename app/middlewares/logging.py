@@ -60,7 +60,8 @@ def task_logging_middleware(handler, logger=None):
 
     Args:
         handler (callable): The task handler function to be wrapped.
-        logger (Optional[Logger]): Logger instance to use for logging. If not provided, a default StandardLoggerService will be used.
+        logger (Optional[Logger]): Logger instance to use for logging. If not provided,
+                            a default StandardLoggerService will be used.
 
     Returns:
         callable: Wrapped handler function with logging.

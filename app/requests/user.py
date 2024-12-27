@@ -12,12 +12,15 @@ class UserCreateRequest(BaseModel):
         username (str): The username of the user. Must be between 3 and 50 characters long.
         email (EmailStr): The email address of the user.
         password (str): The password for the user.
-        created_at (datetime): The timestamp when the user was created. Defaults to the current datetime.
-        updated_at (datetime): The timestamp when the user was last updated. Defaults to the current datetime.
+        created_at (datetime): The timestamp when the user was created. Defaults to the
+                                current datetime.
+        updated_at (datetime): The timestamp when the user was last updated. Defaults to
+                                the current datetime.
 
     Methods:
-        check_name(cls, value): Validates the username. Ensures it is not empty, and is between 3 and 50 characters long.
-        check_email(cls, value): Validates the email. Ensures it is not empty.
+        check_name(cls, value): Validates the username. Ensures it is not empty, and is
+        between 3 and 50 characters long. check_email(cls, value): Validates the email.
+        Ensures it is not empty.
     """
 
     username: str
@@ -61,7 +64,8 @@ class UserUpdateRequest(BaseModel):
         updated_at (datetime): The timestamp when the user was last updated. Defaults to the current datetime.
 
     Validators:
-        check_name (str): Validates the username field. Ensures it is not empty, and is between 3 and 20 characters long if provided.
+        check_name (str): Validates the username field. Ensures it is not empty, and is between 3
+                            and 20 characters long if provided.
         check_email (str): Validates the email field. Ensures it is not empty if provided.
     """
 
