@@ -3,8 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
+from app.helpers.database import db
 from app.models.user import User
-from config.database import db
 
 
 class UserFindRequest(BaseModel):

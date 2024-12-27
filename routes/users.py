@@ -10,6 +10,7 @@ from app.exceptions.user import (
     InvalidSortFieldError,
     UserNotFoundError,
 )
+from app.helpers.database import db
 from app.requests.user import UserCreateRequest, UserUpdateRequest
 from app.responses.user import (
     PaginatedUserResponse,
@@ -17,7 +18,6 @@ from app.responses.user import (
     UserCreateResponse,
 )
 from app.services.user import UserService
-from config.database import db
 
 
 def get_user_service(db: Session = Depends(db)) -> UserService:
