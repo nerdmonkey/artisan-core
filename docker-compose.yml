@@ -1,5 +1,5 @@
 services:
-  data_validation:
+  spartan_data_validation:
     build: .
     container_name: spartan_data_validation
     volumes:
