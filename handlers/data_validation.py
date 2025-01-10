@@ -5,7 +5,8 @@ logger = StandardLoggerService()
 
 
 def main():
-    logger.info(f"Currently in {env().APP_ENVIRONMENT} environment")
+    environment = env().APP_ENVIRONMENT
+    logger.info(f"Currently in {environment} environment")
     logger.info("Hello, from Spartan")
 
     return {
