@@ -43,7 +43,9 @@ class UserCreateRequest(BaseModel):
 
     @field_validator("username", mode="before")
     def check_name(cls, value):
-        existing_username = db().query(User).filter(User.username == value).first()
+        existing_username = (
+            db().query(User).filter(User.username == value).first()
+        )
 
         if existing_username:
             raise ValueError("User with this username already exists")

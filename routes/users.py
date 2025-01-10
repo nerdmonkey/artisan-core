@@ -41,8 +41,12 @@ route = APIRouter(
 @route.get("/users", status_code=200, response_model=PaginatedUserResponse)
 async def get_users(
     page: Optional[int] = Query(1, description="page number", gt=0),
-    items_per_page: Optional[int] = Query(10, description="items per page", gt=0),
-    sort_type: Optional[str] = Query("asc", description="sort type (asc or desc)"),
+    items_per_page: Optional[int] = Query(
+        10, description="items per page", gt=0
+    ),
+    sort_type: Optional[str] = Query(
+        "asc", description="sort type (asc or desc)"
+    ),
     sort_by: Optional[str] = Query("id", description="sort by field"),
     username: Optional[str] = Query(None, description="username filter"),
     email: Optional[str] = Query(None, description="email filter"),
@@ -234,7 +238,9 @@ async def delete_user(
 
 @route.delete("/users/{ids}/bulk", status_code=status.HTTP_200_OK)
 async def batch_delete_users(
-    ids: str = Path(..., description="Comma-separated list of user IDs to delete"),
+    ids: str = Path(
+        ..., description="Comma-separated list of user IDs to delete"
+    ),
     user_service: UserService = Depends(get_user_service),
 ):
     """

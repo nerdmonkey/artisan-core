@@ -9,7 +9,11 @@ from app.exceptions.user import (
 )
 from app.models.user import User
 from app.requests.user import UserCreateRequest, UserUpdateRequest
-from app.responses.user import UserCreateResponse, UserResponse, UserUpdateResponse
+from app.responses.user import (
+    UserCreateResponse,
+    UserResponse,
+    UserUpdateResponse,
+)
 from app.services.user import UserService
 
 
@@ -69,10 +73,16 @@ class MockSession:
     def filter(self, *conditions):
         for condition in conditions:
             # Check if we're filtering by a list of IDs (for the `in_` clause)
-            if hasattr(condition, "right") and isinstance(condition.right.value, list):
-                ids_to_match = condition.right.value  # Assume it's a list of IDs
+            if hasattr(condition, "right") and isinstance(
+                condition.right.value, list
+            ):
+                ids_to_match = (
+                    condition.right.value
+                )  # Assume it's a list of IDs
                 self.filtered_users = [
-                    user for user in self.filtered_users if user.id in ids_to_match
+                    user
+                    for user in self.filtered_users
+                    if user.id in ids_to_match
                 ]
             elif hasattr(condition, "left") and hasattr(condition, "right"):
                 # Handle other attribute-value filters
@@ -98,7 +108,9 @@ class MockSession:
 
     def all(self):
         start = getattr(self, "pagination_offset", 0)
-        end = start + getattr(self, "pagination_limit", len(self.filtered_users))
+        end = start + getattr(
+            self, "pagination_limit", len(self.filtered_users)
+        )
         return self.filtered_users[start:end]
 
     def count(self):
@@ -227,7 +239,9 @@ def test_filter_users_by_date(user_service, create_test_users):
     end_date = datetime(2022, 1, 31)
 
     # Call the `all` method with the date filter
-    users, total, _, _, _ = user_service.all(start_date=start_date, end_date=end_date)
+    users, total, _, _, _ = user_service.all(
+        start_date=start_date, end_date=end_date
+    )
 
     # Verify that the method returns the expected number of users
     assert len(users) == 2  # Adjust based on expected result count
@@ -246,7 +260,9 @@ def test_total_users(mock_db_session):
 def test_save_user(mock_db_session):
     user_service = UserService(db=mock_db_session)
     user_request = UserCreateRequest(
-        username="testnewuser", email="new_user@example.com", password="password"
+        username="testnewuser",
+        email="new_user@example.com",
+        password="password",
     )
     saved_user = user_service.save(user_request)
 
@@ -259,7 +275,9 @@ def test_save_duplicate_user(mock_db_session):
     mock_db_session.add(create_test_user(email="duplicate@example.com"))
     user_service = UserService(db=mock_db_session)
     user_request = UserCreateRequest(
-        username="duplicateuser", email="duplicate@example.com", password="password"
+        username="duplicateuser",
+        email="duplicate@example.com",
+        password="password",
     )
 
     with pytest.raises(DuplicateUserError):

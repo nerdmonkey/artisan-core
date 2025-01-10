@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
 
-from config.app import env
+from app.helpers.environment import env
 from routes import health, users
 
 sys.path.append(".")

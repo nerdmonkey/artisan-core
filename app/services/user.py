@@ -10,7 +10,11 @@ from app.exceptions.user import (
 )
 from app.models.user import User
 from app.requests.user import UserCreateRequest, UserUpdateRequest
-from app.responses.user import UserCreateResponse, UserResponse, UserUpdateResponse
+from app.responses.user import (
+    UserCreateResponse,
+    UserResponse,
+    UserUpdateResponse,
+)
 
 
 class UserService:
@@ -167,7 +171,9 @@ class UserService:
             updated_at=new_user.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
         )
 
-    def update(self, id: int, user_request: UserUpdateRequest) -> UserUpdateResponse:
+    def update(
+        self, id: int, user_request: UserUpdateRequest
+    ) -> UserUpdateResponse:
         """
         Updates an existing user with the provided data.
         Args:
@@ -237,7 +243,9 @@ class UserService:
         """
 
         try:
-            users_to_delete = self.db.query(User).filter(User.id.in_(user_ids)).all()
+            users_to_delete = (
+                self.db.query(User).filter(User.id.in_(user_ids)).all()
+            )
             if not users_to_delete:
                 raise UserNotFoundError("No users found for the given IDs")
 
