@@ -19,9 +19,10 @@ consistency, allowing you to build scalable and efficient applications on AWS wi
 
 Spartan Framework is versatile and can be used to efficiently develop:
 - API
-- Workflows or State Machines
-- ETL Pipelines
+- AWS Step Functions
+- Event-Driven Applications
 - Containerized Microservices
+- AWS Glue Jobs
 
 Fully tested in AWS, Spartan Framework is also compatible with other cloud providers
 like Azure and GCP, making it a flexible choice for a wide range of serverless applications.
