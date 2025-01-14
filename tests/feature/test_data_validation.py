@@ -1,13 +1,16 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
+
 from handlers.data_validation import main
 
-@patch('handlers.data_validation.env')
-@patch('handlers.data_validation.logger')
+
+@patch("handlers.data_validation.env")
+@patch("handlers.data_validation.logger")
 def test_main(mock_logger, mock_env):
-    mock_env().APP_ENVIRONMENT = 'test'
+    mock_env().APP_ENVIRONMENT = "test"
     result = main()
-    mock_logger.info.assert_any_call('Currently in test environment')
+    mock_logger.info.assert_any_call("Currently in test environment")
     mock_logger.info.assert_any_call("Hello, from Spartan")
 
     assert (
@@ -16,12 +19,13 @@ def test_main(mock_logger, mock_env):
 
     assert result["status_code"] == 200, "Unexpected status code."
 
-@patch('handlers.data_validation.env')
-@patch('handlers.data_validation.logger')
+
+@patch("handlers.data_validation.env")
+@patch("handlers.data_validation.logger")
 def test_main_different_environment(mock_logger, mock_env):
-    mock_env().APP_ENVIRONMENT = 'production'
+    mock_env().APP_ENVIRONMENT = "production"
     result = main()
-    mock_logger.info.assert_any_call('Currently in production environment')
+    mock_logger.info.assert_any_call("Currently in production environment")
     mock_logger.info.assert_any_call("Hello, from Spartan")
 
     assert (
