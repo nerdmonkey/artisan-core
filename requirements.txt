@@ -40,6 +40,7 @@ filelock==3.16.1
 flatbuffers==24.12.23
 fonttools==4.55.3
 fsspec==2024.12.0
+funcy==2.0
 gast==0.6.0
 gensim==4.3.3
 google-pasta==0.2.0
@@ -84,7 +85,9 @@ msgpack==1.1.0
 murmurhash==1.0.12
 namex==0.0.8
 networkx==3.4.2
+nltk==3.9.1
 numba==0.60.0
+numexpr==2.10.2
 numpy==1.26.4
 opt_einsum==3.4.0
 optree==0.14.0
@@ -108,6 +111,7 @@ pydantic_core==2.27.2
 Pygments==2.19.1
 PyGObject==3.48.2
 PyJWT==2.7.0
+pyLDAvis==3.4.1
 PyMySQL==1.1.1
 pynndescent==0.5.13
 pyparsing==3.1.1

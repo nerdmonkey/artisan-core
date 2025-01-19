@@ -6,7 +6,10 @@
 .coverage
 .coveragerc
 .tox
+.env
 docs
+storage/core
+storage/logs
 serverless.yml
 docker-compose.yml
 Dockerfile
