@@ -67,7 +67,7 @@ moto = "4.2.9"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --cov=."
+addopts = "-ra -q"
 testpaths = [
     "tests",
     "integrations",
