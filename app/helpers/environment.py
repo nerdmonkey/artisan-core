@@ -30,6 +30,8 @@ class EnvironmentVariables(BaseSettings):
         DB_NAME (str): The name of the database.
         DB_USERNAME (str): The username for the database connection.
         DB_PASSWORD (str): The password for the database connection.
+        DB_SSL_CA (Optional[str]): The SSL CA certificate for the database connection. Defaults to None.
+        DB_SSL_VERIFY_CERT (Optional[bool]): Flag to enable or disable SSL certificate verification. Defaults to None.
 
     Methods:
         default_db_port(cls, v): Validates and converts the database port to an integer.
@@ -50,6 +52,8 @@ class EnvironmentVariables(BaseSettings):
     DB_NAME: str
     DB_USERNAME: str
     DB_PASSWORD: str
+    DB_SSL_CA: Optional[str] = None
+    DB_SSL_VERIFY_CERT: Optional[bool] = None
 
     model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")
 
