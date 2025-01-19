@@ -1,7 +1,7 @@
 services:
-  spartan_data_validation:
+  spartan_validation:
     build: .
-    container_name: spartan_data_validation
+    container_name: spartan_validation
     volumes:
       - .:/usr/src/app
     environment:
@@ -10,4 +10,18 @@ services:
       - PYTHONPATH=/usr/src/app
     env_file:
       - .env
-    command: python3 handlers/data_validation.py
+    command: python3 handlers/validation.py
+  spartan_bash:
+    build: .
+    container_name: spartan_bash
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/usr/src/app
+    env_file:
+      - .env
+    command: /bin/bash
+    stdin_open: true
+    tty: true

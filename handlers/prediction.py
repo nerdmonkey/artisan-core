@@ -7,7 +7,7 @@ logger = StandardLoggerService()
 def main():
     environment = env().APP_ENVIRONMENT
     logger.info(f"Currently in {environment} environment")
-    logger.info("Hello, from Spartan")
+    logger.info("Hello, from Spartan Prediction")
 
     return {
         "status_code": 200,
