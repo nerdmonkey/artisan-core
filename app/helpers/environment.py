@@ -78,9 +78,10 @@ def env(var_name: Optional[str] = None) -> Optional[str]:
         var_name (Optional[str]): The name of the environment variable to retrieve. Defaults to None.
 
     Returns:
-        EnvironmentVariables or Optional[str]: An instance of the EnvironmentVariables class or the value of the specified environment variable.
+        EnvironmentVariables or Optional[str]: An instance of the EnvironmentVariables class or the value
+        of the specified environment variable.
     """
     env_vars = EnvironmentVariables()
-    if (var_name):
+    if var_name:
         return getattr(env_vars, var_name, None)
     return env_vars
